@@ -42,6 +42,8 @@ public class ShimmerLayout extends FrameLayout {
 
     private boolean isAnimationStarted;
     private boolean autoStart;
+
+    private float shimmerWidthScaleFactor;
     private int shimmerAnimationDuration;
     private int shimmerAnimationDelayDuration;
     private int shimmerColor;
@@ -75,6 +77,7 @@ public class ShimmerLayout extends FrameLayout {
             shimmerAngle = a.getInteger(R.styleable.ShimmerLayout_shimmer_angle, DEFAULT_ANGLE);
             shimmerAnimationDuration = a.getInteger(R.styleable.ShimmerLayout_shimmer_animation_duration, DEFAULT_ANIMATION_DURATION);
             shimmerAnimationDelayDuration = a.getInteger(R.styleable.ShimmerLayout_shimmer_animation_delay_duration, DEFAULT_DELAY_BETWEEN_ANIMATIONS);
+            shimmerWidthScaleFactor  = a.getFloat(R.styleable.ShimmerLayout_shimmer_width_factor, 1.0f);
             shimmerColor = a.getColor(R.styleable.ShimmerLayout_shimmer_color, getColor(R.color.shimmer_color));
             autoStart = a.getBoolean(R.styleable.ShimmerLayout_shimmer_auto_start, false);
         } finally {
@@ -270,7 +273,6 @@ public class ShimmerLayout extends FrameLayout {
         Canvas canvas = new Canvas(sourceMaskBitmap);
         canvas.rotate(shimmerAngle, width / 2, height / 2);
         canvas.drawRect(-maskRect.left, maskRect.top, width + maskRect.left, maskRect.bottom, paint);
-
         return sourceMaskBitmap;
     }
 
@@ -301,7 +303,7 @@ public class ShimmerLayout extends FrameLayout {
                 ShimmerLayout.this.post(new Runnable() {
                     @Override
                     public void run() {
-                        if(maskAnimator != null) {
+                        if (maskAnimator != null) {
                             maskAnimator.setStartDelay(shimmerAnimationDelayDuration);
                             maskAnimator.start();
                         }
@@ -367,25 +369,26 @@ public class ShimmerLayout extends FrameLayout {
     }
 
     private Rect calculateMaskRect() {
+        int width = (int) (getWidth() * shimmerWidthScaleFactor);
         if (shimmerAngle == 0) {
-            return new Rect((int) (getWidth() * 0.25), 0, (int) (getWidth() * 0.75), getHeight());
+            return new Rect((int) (width * 0.25), 0, (int) (width * 0.75), getHeight());
         }
 
         int top = 0;
-        int right = (int) (getWidth() * 0.75);
-        int center = (int) (getHeight() * 0.5);
+        int right = (int) (width * 0.75);
+        int center = (int) (width * 0.5);
         Point originalTopRight = new Point(right, top);
         Point originalCenterRight = new Point(right, center);
 
-        Point rotatedTopRight = rotatePoint(originalTopRight, shimmerAngle, getWidth() / 2, getHeight() / 2);
-        Point rotatedCenterRight = rotatePoint(originalCenterRight, shimmerAngle, getWidth() / 2, getHeight() / 2);
+        Point rotatedTopRight = rotatePoint(originalTopRight, shimmerAngle, width / 2, getHeight() / 2);
+        Point rotatedCenterRight = rotatePoint(originalCenterRight, shimmerAngle, width / 2, getHeight() / 2);
         Point rotatedIntersection = getTopIntersection(rotatedTopRight, rotatedCenterRight);
         int halfMaskHeight = distanceBetween(rotatedCenterRight, rotatedIntersection);
 
         int paddingVertical = (getHeight() / 2) - halfMaskHeight;
-        int paddingHorizontal = (getWidth() - rotatedIntersection.x);
+        int paddingHorizontal = (width - rotatedIntersection.x);
 
-        return new Rect(paddingHorizontal, paddingVertical, getWidth() - paddingHorizontal, getHeight() - paddingVertical);
+        return new Rect(paddingHorizontal, paddingVertical, width - paddingHorizontal, getHeight() - paddingVertical);
     }
 
     /**
