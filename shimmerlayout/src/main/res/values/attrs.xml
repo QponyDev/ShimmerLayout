@@ -4,6 +4,7 @@
         <attr name="shimmer_color" format="color|reference"/>
         <attr name="shimmer_animation_duration" format="integer|reference"/>
         <attr name="shimmer_animation_delay_duration" format="integer|reference"/>
+        <attr name="shimmer_width_factor" format="float|reference"/>
         <attr name="shimmer_auto_start" format="boolean|reference"/>
         <attr name="shimmer_angle" format="integer|reference"/>
     </declare-styleable>
