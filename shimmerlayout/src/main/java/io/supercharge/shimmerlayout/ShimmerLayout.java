@@ -1,7 +1,6 @@
 package io.supercharge.shimmerlayout;
 
 import android.animation.Animator;
-import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -24,6 +23,8 @@ import android.widget.FrameLayout;
 public class ShimmerLayout extends FrameLayout {
 
     private static final int DEFAULT_ANIMATION_DURATION = 1500;
+    private static final int DEFAULT_DELAY_BETWEEN_ANIMATIONS = 0;
+
     private static final int DEFAULT_ANGLE = 20;
     private static final int MIN_ANGLE_VALUE = 0;
     private static final int MAX_ANGLE_VALUE = 30;
@@ -42,6 +43,7 @@ public class ShimmerLayout extends FrameLayout {
     private boolean isAnimationStarted;
     private boolean autoStart;
     private int shimmerAnimationDuration;
+    private int shimmerAnimationDelayDuration;
     private int shimmerColor;
     private int shimmerAngle;
 
@@ -72,6 +74,7 @@ public class ShimmerLayout extends FrameLayout {
         try {
             shimmerAngle = a.getInteger(R.styleable.ShimmerLayout_shimmer_angle, DEFAULT_ANGLE);
             shimmerAnimationDuration = a.getInteger(R.styleable.ShimmerLayout_shimmer_animation_duration, DEFAULT_ANIMATION_DURATION);
+            shimmerAnimationDelayDuration = a.getInteger(R.styleable.ShimmerLayout_shimmer_animation_delay_duration, DEFAULT_DELAY_BETWEEN_ANIMATIONS);
             shimmerColor = a.getColor(R.styleable.ShimmerLayout_shimmer_color, getColor(R.color.shimmer_color));
             autoStart = a.getBoolean(R.styleable.ShimmerLayout_shimmer_auto_start, false);
         } finally {
@@ -214,6 +217,7 @@ public class ShimmerLayout extends FrameLayout {
         if (maskAnimator != null) {
             maskAnimator.end();
             maskAnimator.removeAllUpdateListeners();
+            maskAnimator.removeAllListeners();
         }
 
         maskAnimator = null;
@@ -286,7 +290,35 @@ public class ShimmerLayout extends FrameLayout {
 
         maskAnimator = ValueAnimator.ofFloat(0.0F, 1.0F);
         maskAnimator.setDuration(shimmerAnimationDuration);
-        maskAnimator.setRepeatCount(ObjectAnimator.INFINITE);
+        maskAnimator.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                //not used
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                ShimmerLayout.this.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(maskAnimator != null) {
+                            maskAnimator.setStartDelay(shimmerAnimationDelayDuration);
+                            maskAnimator.start();
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                //not used
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+                //not used
+            }
+        });
 
         final float[] value = new float[1];
         maskAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
